@@ -29,19 +29,15 @@ const Bird = struct {
     }
 };
 
-// for simplicity's sake, we'll just assume a 1,000 x 1,000 grid in the coordinate
-// system, and all the caller to specify how that's broken up into subgrids in the
-// call to init. We'll just assume square subgrids for now
-// We'll want to have nice and even grid sizes, so we'll clamp to the nearest value if
-// necessary and emit a warning if we do so
+// Just assume square subgrids for now
 pub fn SimSpace(comptime space_len: u32, comptime subgrid_size: u32) type {
     return struct {
         const Self = @This();
 
-        const n_subgrids = space_len / subgrid_size;
+        const N_SUBGRIDS = space_len / subgrid_size;
 
         allocator: std.mem.Allocator,
-        grids: [n_subgrids][n_subgrids]Grid,
+        grids: [N_SUBGRIDS][N_SUBGRIDS]Grid,
         space_len: u32,
         grid_len: u32,
 
@@ -53,9 +49,9 @@ pub fn SimSpace(comptime space_len: u32, comptime subgrid_size: u32) type {
                 @compileError("Subgrid size must evenly divide the simulation space size");
             }
 
-            var grids: [n_subgrids][n_subgrids]Grid = undefined;
-            for (0..n_subgrids) |i| {
-                for (0..n_subgrids) |j| {
+            var grids: [N_SUBGRIDS][N_SUBGRIDS]Grid = undefined;
+            for (0..N_SUBGRIDS) |i| {
+                for (0..N_SUBGRIDS) |j| {
                     grids[i][j] = try Grid.init(allocator);
                 }
             }
@@ -85,8 +81,8 @@ pub fn SimSpace(comptime space_len: u32, comptime subgrid_size: u32) type {
         }
 
         fn get_grid_idx(pos: Vector2) struct { u32, u32 } {
-            const x_idx: u32 = @intFromFloat((pos.x / @as(f32, @floatFromInt(space_len))) * n_subgrids);
-            const y_idx: u32 = @intFromFloat((pos.x / @as(f32, @floatFromInt(space_len))) * n_subgrids);
+            const x_idx: u32 = @intFromFloat((pos.x / @as(f32, @floatFromInt(space_len))) * N_SUBGRIDS);
+            const y_idx: u32 = @intFromFloat((pos.x / @as(f32, @floatFromInt(space_len))) * N_SUBGRIDS);
             return .{ x_idx, y_idx };
         }
 
@@ -147,7 +143,7 @@ pub fn main() anyerror!void {
     const allocator = gpa.allocator();
     defer std.debug.assert(gpa.deinit() == .ok);
 
-    rl.initWindow(screenWidth, screenHeight, "raylib-zig [core] example - basic window");
+    rl.initWindow(screenWidth, screenHeight, "Boids Simulation");
     defer rl.closeWindow(); // Close window and OpenGL context
 
     rl.setTargetFPS(60); // Set our game to run at 60 frames-per-second
